@@ -1207,6 +1207,8 @@ export function correctTranslatedContentStrings(
     content = content.replaceAll('{% avertissement %}', '{% warning %}')
     content = content.replaceAll('{%- avertissement %}', '{%- warning %}')
     content = content.replaceAll('{%- avertissement -%}', '{%- warning -%}')
+    // The translator rendered "endwarning" as the words "fin avertissement".
+    content = content.replace(/\{%(-?)\s*fin avertissement\s*(-?)%\}/g, '{%$1 endwarning $2%}')
     content = content.replaceAll('{% conseil %}', '{% tip %}')
     content = content.replaceAll('{%- conseil %}', '{%- tip %}')
     content = content.replaceAll('{%- conseil -%}', '{%- tip -%}')
@@ -1525,6 +1527,16 @@ export function correctTranslatedContentStrings(
   if (context.code === 'de') {
     // U+2013 appears where the Liquid trim hyphen belongs.
     content = content.replaceAll('{%–', '{%-')
+
+    // The translator rendered the Liquid operator "not" as "nicht", as in {% ifversion nicht ghes %}.
+    content = content.replace(/\{%-?\s*(?:ifversion|elsif)\s[^%]*?%\}/g, (match) =>
+      match.replace(/\bnicht\b/g, 'not'),
+    )
+    // A stray space after the dot in a data path, as in variables.release-phases. public_preview.
+    content = content.replace(
+      /\{%(-?)\s*data\s+variables\.release-phases\.\s+([A-Za-z0-9_-]+)/g,
+      '{%$1 data variables.release-phases.$2',
+    )
 
     content = content.replaceAll('{% Daten variables', '{% data variables')
     content = content.replaceAll('{% daten variables', '{% data variables')
@@ -1879,7 +1891,14 @@ export function correctTranslatedContentStrings(
   content = content.replaceAll('{%- endifen %}', '{%- endif %}')
   content = content.replaceAll('{% Endifen %}', '{% endif %}')
   content = content.replaceAll('{%- Endifen %}', '{%- endif %}')
-  content = content.replaceAll('{% endif _%}', '{% endif %}')
+  // A stray underscore before the closing delimiter, as in {% endif _ %} or {% else _%}.
+  content = content.replace(/\{%(-?)\s*(endif|else)\s+_\s*(-?)%\}/g, '{%$1 $2 $3%}')
+
+  // The translator localized the decimal point in a version comparison, as in
+  // {% ifversion ghes = 3,9 %}. Applies to every language.
+  content = content.replace(/\{%-?\s*(?:ifversion|elsif)\s[^%]*?%\}/g, (match) =>
+    match.replace(/(\d),(\d)/g, '$1.$2'),
+  )
 
   content = content.replaceAll('{% okticon ', '{% octicon ')
 

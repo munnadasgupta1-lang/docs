@@ -4,7 +4,7 @@
 
 # Update the base image digest from the gh-base-noble package page:
 # https://github.com/github/gh-base-image/pkgs/container/gh-base-image%2Fgh-base-noble
-FROM ghcr.io/github/gh-base-image/gh-base-noble:20261020-225427-g5ec2175c5@sha256:931ce7d43f6f3dbe28113cb12f5fac2206a0b08dad395172f6d73ce4f95f77f3 AS base
+FROM ghcr.io/github/gh-base-image/gh-base-noble:20261028-150140-g8ff90a672@sha256:2f8cb0ab06a0547bd9d70a81829f680208e7e6852d1e6abc1f68569d414e3d00 AS base
 # Install curl for NodeSource setup.
 # Install git for early-access and translation clones.
 # Ubuntu's nodejs package lags the Node LTS release line.
@@ -15,9 +15,11 @@ RUN --mount=type=secret,id=pkg-mirror-host,target=/etc/pkg_mirror_host.txt \
   if [ -f /etc/pkg_mirror_host.txt ]; then cat /etc/pkg_mirror_host.txt >> /etc/apt/mirrorlist.txt; fi
 RUN --mount=type=secret,id=apt-auth-conf,target=/etc/apt/auth.conf.d/apt_auth.conf \
   apt-get -qq update && apt-get -qq install --no-install-recommends curl git \
-  && curl -sL https://deb.nodesource.com/setup_24.x | bash - \
+  && curl -sL https://deb.nodesource.com/setup_26.x | bash - \
   && apt-get install -y nodejs \
   && node --version
+# Fail the build unless NodeSource installed Node 26.x at 26.12.1 or later (CVE-2026-111497 brotli decoder fix).
+RUN node -e 'const [maj, min, pat] = process.versions.node.split(".").map(Number); if (maj !== 26 || min < 12 || (min === 12 && pat < 1)) { throw new Error("Node 26.x >= 26.12.1 required (brotli CVE-2026-111497), got " + process.versions.node); }'
 # Stages built FROM base inherit this ARG, so every later stage can use APP_HOME.
 ARG APP_HOME="/home/node/app"
 RUN useradd -ms /bin/bash node \

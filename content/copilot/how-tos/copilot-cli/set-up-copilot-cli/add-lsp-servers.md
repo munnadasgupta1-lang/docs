@@ -161,13 +161,28 @@ Within each server definition, the following fields are available/required:
   <tbody>
     <tr>
       <td nowrap><code>command</code></td>
-      <td nowrap>Yes</td>
-      <td>The command used to start the LSP server.</td>
+      <td nowrap>No</td>
+      <td>The command used to start the LSP server. At least one of <code>command</code>, <code>bash</code>, or <code>powershell</code> must be specified.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>bash</code></td>
+      <td nowrap>No</td>
+      <td>A bash script to run instead of <code>command</code>, for servers that need shell features such as pipes or environment setup. Not used on Windows if <code>powershell</code> is also set.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>powershell</code></td>
+      <td nowrap>No</td>
+      <td>A PowerShell script to run instead of <code>command</code>, used on Windows when set.</td>
     </tr>
     <tr>
       <td nowrap><code>args</code></td>
       <td nowrap>No</td>
-      <td>Arguments to pass to the command.</td>
+      <td>Arguments to pass to <code>command</code>. Ignored when the server is launched with <code>bash</code> or <code>powershell</code>.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>cwd</code></td>
+      <td nowrap>No</td>
+      <td>The working directory to launch the server from. Defaults to the project root.</td>
     </tr>
     <tr>
       <td nowrap><code>fileExtensions</code></td>
@@ -198,6 +213,16 @@ Within each server definition, the following fields are available/required:
       <td nowrap><code>initializationTimeoutMs</code></td>
       <td nowrap>No</td>
       <td>The timeout for the server's startup handshake in milliseconds (default: 60 seconds). If a server needs more time for initial project analysis, increase this value.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>spawnTimeoutMs</code></td>
+      <td nowrap>No</td>
+      <td>The timeout for spawning the server process in milliseconds.</td>
+    </tr>
+    <tr>
+      <td nowrap><code>warmupTimeoutMs</code></td>
+      <td nowrap>No</td>
+      <td>The timeout for the server's warmup phase in milliseconds.</td>
     </tr>
   </tbody>
 </table>
@@ -280,15 +305,15 @@ You can list and manage your LSP servers in an interactive CLI session using the
 
 | Slash command             | Description |
 |---------------------------|-------------|
-| `/lsp` or `/lsp show`     | Show the status of all configured LSP servers. |
+| `/lsp list` (or `/lsp show`) | Show the status of all configured LSP servers. |
 | `/lsp test SERVER-NAME`   | Test whether a server starts correctly. |
 | `/lsp reload`             | Reload LSP configurations from disk. |
 | `/lsp logs`               | Open the live LSP services panel to view server logs. |
-| `/lsp help`               | Show `/lsp` command information. |
+| `/lsp` or `/lsp help`     | Show `/lsp` command information. |
 
 ### Listing available LSP servers
 
-1. In {% data variables.copilot.copilot_cli_short %}, confirm that the LSP server you chose is available by using the `/lsp` slash command. You will see output such as:
+1. In {% data variables.copilot.copilot_cli_short %}, confirm that the LSP server you chose is available by using the `/lsp list` slash command. You will see output such as:
 
    ```text
    ● LSP Server Status:

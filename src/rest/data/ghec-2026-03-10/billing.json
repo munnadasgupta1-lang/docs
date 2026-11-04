@@ -744,7 +744,7 @@
         {
           "type": "string",
           "name": "budget_scope",
-          "description": "<p>The scope of the budget.</p>\n<ul>\n<li><code>enterprise</code>: Apply the budget to the entire enterprise.</li>\n<li><code>organization</code>: Apply the budget to a specific organization in the enterprise.</li>\n<li><code>repository</code>: Apply the budget to a specific repository.</li>\n<li><code>cost_center</code>: Apply the budget to a specific cost center.</li>\n<li><code>multi_user_customer</code>: Apply a universal budget to all users in the enterprise.</li>\n<li><code>multi_user_cost_center</code>: Apply a universal budget to all users in a cost center.</li>\n<li><code>user</code>: Apply the budget to a single user.</li>\n</ul>\n<p><code>user</code>, <code>multi_user_customer</code>, and <code>multi_user_cost_center</code> scopes are only supported when <code>budget_product_sku</code> is <code>ai_credits</code> or <code>premium_requests</code>.</p>",
+          "description": "<p>The scope of the budget.</p>\n<ul>\n<li><code>enterprise</code>: Apply the budget to the entire enterprise.</li>\n<li><code>organization</code>: Apply the budget to a specific organization in the enterprise.</li>\n<li><code>repository</code>: Apply the budget to a specific repository.</li>\n<li><code>cost_center</code>: Apply the budget to a specific cost center.</li>\n<li><code>multi_user_customer</code>: Apply a universal budget to all users in the enterprise.</li>\n<li><code>multi_user_cost_center</code>: Apply a universal budget to all users in a cost center. The cost center may be empty or contain only users and teams. Organization and repository members are not supported.</li>\n<li><code>user</code>: Apply the budget to a single user.</li>\n</ul>\n<p><code>user</code>, <code>multi_user_customer</code>, and <code>multi_user_cost_center</code> scopes are only supported when <code>budget_product_sku</code> is <code>ai_credits</code> or <code>premium_requests</code>.</p>",
           "isRequired": true,
           "enum": [
             "enterprise",
@@ -759,7 +759,7 @@
         {
           "type": "string",
           "name": "budget_entity_name",
-          "description": "<p>The name of the entity to apply the budget to</p>",
+          "description": "<p>The entity to apply the budget to. The expected value depends on <code>budget_scope</code>.</p>\n<ul>\n<li><code>organization</code>: The organization login.</li>\n<li><code>repository</code>: The repository in <code>owner/repo</code> format.</li>\n<li><code>cost_center</code>: The cost center UUID.</li>\n<li><code>multi_user_cost_center</code>: The cost center UUID.</li>\n<li><code>enterprise</code>, <code>multi_user_customer</code>, and <code>user</code>: Not used. For <code>user</code>, set the <code>user</code> field instead.</li>\n</ul>",
           "default": ""
         },
         {
@@ -2079,6 +2079,656 @@
         "permissions": [
           {
             "\"Enterprise billing\" enterprise permissions": "write"
+          }
+        ]
+      }
+    },
+    {
+      "serverUrl": "https://api.github.com",
+      "verb": "get",
+      "requestPath": "/enterprises/{enterprise}/settings/billing/cost-centers/memberships",
+      "title": "Get cost center membership for a resource",
+      "category": "billing",
+      "subcategory": "cost-centers",
+      "parameters": [
+        {
+          "name": "enterprise",
+          "description": "<p>The slug version of the enterprise name.</p>",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "resource_type",
+          "in": "query",
+          "required": true,
+          "description": "<p>The type of resource to lookup. Must be one of: user, repository, organization, team.</p>",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "user",
+              "repository",
+              "organization",
+              "team"
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "in": "query",
+          "required": true,
+          "description": "<p>The identifier for the resource. For users and organizations, this is the login or organization name. For repositories, use the format \"owner/repo\". For teams, use the enterprise team slug.</p>",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "bodyParameters": [],
+      "descriptionHTML": "<p>Gets the cost center membership information for a specified resource (user, organization, repository, or enterprise team).\nEnterprise owners, billing managers, and organization owners in the enterprise can view membership information. A custom role holder with fine-grained read access to enterprise billing can also view membership information. An installation access token for a GitHub App installed on the enterprise with read access to enterprise billing can get cost center membership information for any resource in the enterprise.\nOrganization owners are limited to organizations they own, users who belong to those organizations, repositories they can see, and enterprise teams visible to them.</p>",
+      "codeExamples": [
+        {
+          "request": {
+            "description": "Example 1: Status Code 200",
+            "acceptHeader": "application/vnd.github.v3+json",
+            "parameters": {
+              "enterprise": "ENTERPRISE"
+            }
+          },
+          "response": {
+            "statusCode": "200",
+            "contentType": "application/json",
+            "description": "<p>Success</p>",
+            "example": {
+              "resource": {
+                "type": "user",
+                "identifier": {
+                  "login": "octocat"
+                }
+              },
+              "memberships": [
+                {
+                  "cost_center": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "name": "Engineering Team"
+                  }
+                }
+              ]
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "organization",
+                        "repository",
+                        "team"
+                      ],
+                      "description": "The type of resource."
+                    },
+                    "identifier": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "login": {
+                              "type": "string",
+                              "description": "The login name for a user."
+                            }
+                          },
+                          "required": [
+                            "login"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name for an organization."
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "description": "The owner of the repository."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the repository."
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "slug": {
+                              "type": "string",
+                              "description": "The slug for an enterprise team."
+                            }
+                          },
+                          "required": [
+                            "slug"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "The identifier for the resource."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "identifier"
+                  ]
+                },
+                "memberships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cost_center": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the cost center."
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the cost center."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "The list of cost center memberships for the resource."
+                }
+              },
+              "required": [
+                "resource",
+                "memberships"
+              ]
+            }
+          }
+        },
+        {
+          "request": {
+            "description": "Example 2: Status Code 200",
+            "acceptHeader": "application/vnd.github.v3+json",
+            "parameters": {
+              "enterprise": "ENTERPRISE"
+            }
+          },
+          "response": {
+            "statusCode": "200",
+            "contentType": "application/json",
+            "description": "<p>Success</p>",
+            "example": {
+              "resource": {
+                "type": "organization",
+                "identifier": {
+                  "name": "github"
+                }
+              },
+              "memberships": [
+                {
+                  "cost_center": {
+                    "id": "87654321-4321-4321-4321-210987654321",
+                    "name": "Marketing Team"
+                  }
+                }
+              ]
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "organization",
+                        "repository",
+                        "team"
+                      ],
+                      "description": "The type of resource."
+                    },
+                    "identifier": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "login": {
+                              "type": "string",
+                              "description": "The login name for a user."
+                            }
+                          },
+                          "required": [
+                            "login"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name for an organization."
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "description": "The owner of the repository."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the repository."
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "slug": {
+                              "type": "string",
+                              "description": "The slug for an enterprise team."
+                            }
+                          },
+                          "required": [
+                            "slug"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "The identifier for the resource."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "identifier"
+                  ]
+                },
+                "memberships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cost_center": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the cost center."
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the cost center."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "The list of cost center memberships for the resource."
+                }
+              },
+              "required": [
+                "resource",
+                "memberships"
+              ]
+            }
+          }
+        },
+        {
+          "request": {
+            "description": "Example 3: Status Code 200",
+            "acceptHeader": "application/vnd.github.v3+json",
+            "parameters": {
+              "enterprise": "ENTERPRISE"
+            }
+          },
+          "response": {
+            "statusCode": "200",
+            "contentType": "application/json",
+            "description": "<p>Success</p>",
+            "example": {
+              "resource": {
+                "type": "repository",
+                "identifier": {
+                  "owner": "github",
+                  "name": "docs"
+                }
+              },
+              "memberships": [
+                {
+                  "cost_center": {
+                    "id": "11111111-2222-3333-4444-555555555555",
+                    "name": "Documentation Team"
+                  }
+                }
+              ]
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "organization",
+                        "repository",
+                        "team"
+                      ],
+                      "description": "The type of resource."
+                    },
+                    "identifier": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "login": {
+                              "type": "string",
+                              "description": "The login name for a user."
+                            }
+                          },
+                          "required": [
+                            "login"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name for an organization."
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "description": "The owner of the repository."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the repository."
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "slug": {
+                              "type": "string",
+                              "description": "The slug for an enterprise team."
+                            }
+                          },
+                          "required": [
+                            "slug"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "The identifier for the resource."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "identifier"
+                  ]
+                },
+                "memberships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cost_center": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the cost center."
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the cost center."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "The list of cost center memberships for the resource."
+                }
+              },
+              "required": [
+                "resource",
+                "memberships"
+              ]
+            }
+          }
+        },
+        {
+          "request": {
+            "description": "Example 4: Status Code 200",
+            "acceptHeader": "application/vnd.github.v3+json",
+            "parameters": {
+              "enterprise": "ENTERPRISE"
+            }
+          },
+          "response": {
+            "statusCode": "200",
+            "contentType": "application/json",
+            "description": "<p>Success</p>",
+            "example": {
+              "resource": {
+                "type": "user",
+                "identifier": {
+                  "login": "octocat"
+                }
+              },
+              "memberships": []
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resource": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "organization",
+                        "repository",
+                        "team"
+                      ],
+                      "description": "The type of resource."
+                    },
+                    "identifier": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "login": {
+                              "type": "string",
+                              "description": "The login name for a user."
+                            }
+                          },
+                          "required": [
+                            "login"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "The name for an organization."
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "description": "The owner of the repository."
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the repository."
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "properties": {
+                            "slug": {
+                              "type": "string",
+                              "description": "The slug for an enterprise team."
+                            }
+                          },
+                          "required": [
+                            "slug"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ],
+                      "description": "The identifier for the resource."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "identifier"
+                  ]
+                },
+                "memberships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cost_center": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the cost center."
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the cost center."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "The list of cost center memberships for the resource."
+                }
+              },
+              "required": [
+                "resource",
+                "memberships"
+              ]
+            }
+          }
+        }
+      ],
+      "statusCodes": [
+        {
+          "httpStatusCode": "200",
+          "description": "<p>Success</p>"
+        },
+        {
+          "httpStatusCode": "400",
+          "description": "<p>Bad Request</p>"
+        },
+        {
+          "httpStatusCode": "403",
+          "description": "<p>Forbidden</p>"
+        },
+        {
+          "httpStatusCode": "404",
+          "description": "<p>Resource not found</p>"
+        },
+        {
+          "httpStatusCode": "500",
+          "description": "<p>Internal Error</p>"
+        },
+        {
+          "httpStatusCode": "503",
+          "description": "<p>Service unavailable</p>"
+        }
+      ],
+      "previews": [],
+      "progAccess": {
+        "userToServerRest": true,
+        "serverToServer": true,
+        "fineGrainedPat": false,
+        "permissions": [
+          {
+            "\"Enterprise billing\" enterprise permissions": "read"
           }
         ]
       }

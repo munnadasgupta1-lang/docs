@@ -761,6 +761,13 @@
       "isDeprecated": false,
       "fields": [
         {
+          "name": "ignoredFilePaths",
+          "description": "<p>Files matching these patterns are allowed even when they also match a restricted path.</p>",
+          "type": "[String!]",
+          "id": "string",
+          "href": "/graphql/reference/other#scalar-string"
+        },
+        {
           "name": "restrictedFilePaths",
           "description": "<p>The file paths that are restricted from being pushed to the commit graph.</p>",
           "type": "[String!]!",
@@ -930,6 +937,13 @@
       "description": "<p>Prevent commits with individual files that exceed the specified limit from being pushed to the commit graph.</p>",
       "isDeprecated": false,
       "fields": [
+        {
+          "name": "ignoredFilePaths",
+          "description": "<p>Files matching these patterns may exceed the maximum size.</p>",
+          "type": "[String!]",
+          "id": "string",
+          "href": "/graphql/reference/other#scalar-string"
+        },
         {
           "name": "maxFileSize",
           "description": "<p>The maximum file size allowed in megabytes. This limit does not apply to Git Large File Storage (Git LFS).</p>",
@@ -9330,6 +9344,10 @@
           "description": "<p>Can read, clone, and push to this repository. They can also manage issues, pull requests, and some repository settings.</p>"
         },
         {
+          "name": "MODERATE",
+          "description": "<p>Can read and clone this repository. Can also moderate and edit issues and manage pull requests without write access.</p>"
+        },
+        {
           "name": "READ",
           "description": "<p>Can read and clone this repository. Can also open and comment on issues and pull requests.</p>"
         },
@@ -9339,7 +9357,9 @@
         },
         {
           "name": "TRIAGE_PLUS",
-          "description": "<p>Can read and clone this repository. Can also manage issues and pull requests, plus additional triage abilities.</p>"
+          "description": "<p>Can read and clone this repository. Can also moderate and edit issues and manage pull requests without write access.</p>",
+          "isDeprecated": true,
+          "deprecationReason": "<p>TRIAGE_PLUS has been renamed to MODERATE. Use MODERATE instead. Removal on 2027-04-01 UTC.</p>"
         },
         {
           "name": "WRITE",
@@ -10455,6 +10475,13 @@
       "isDeprecated": false,
       "inputFields": [
         {
+          "name": "ignoredFilePaths",
+          "description": "<p>Files matching these patterns are allowed even when they also match a restricted path.</p>",
+          "type": "[String!]",
+          "id": "string",
+          "href": "/graphql/reference/other#scalar-string"
+        },
+        {
           "name": "restrictedFilePaths",
           "description": "<p>The file paths that are restricted from being pushed to the commit graph.</p>",
           "type": "[String!]!",
@@ -10512,6 +10539,13 @@
       "description": "<p>Prevent commits with individual files that exceed the specified limit from being pushed to the commit graph.</p>",
       "isDeprecated": false,
       "inputFields": [
+        {
+          "name": "ignoredFilePaths",
+          "description": "<p>Files matching these patterns may exceed the maximum size.</p>",
+          "type": "[String!]",
+          "id": "string",
+          "href": "/graphql/reference/other#scalar-string"
+        },
         {
           "name": "maxFileSize",
           "description": "<p>The maximum file size allowed in megabytes. This limit does not apply to Git Large File Storage (Git LFS).</p>",
